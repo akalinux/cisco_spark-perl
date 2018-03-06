@@ -150,6 +150,7 @@ has currentUser=>(
   is=>'rw',
   isa=>HashRef,
   required=>0,
+  lazy=>1,
   default=>sub {return {}}
 );
 
