@@ -25,7 +25,7 @@ has api_url=>(
 
 =head1 NAME
 
-AnyEvent::HTTP::Spark - HTTP Rest Client for Cisco Spark
+AnyEvent::HTTP::Spark - Syncrnous/Asyncrnous HTTP Rest Client for Cisco Spark
 
 =head1 SYNOPSIS
 
@@ -35,7 +35,7 @@ AnyEvent::HTTP::Spark - HTTP Rest Client for Cisco Spark
 
 =head1 DESCRIPTION
 
-THe HTTP Rest client used to interact with the Cisco Spark Web Service.
+Dual Nature Syncrnous/Asyncrnous AnyEvent friendly Spark v1 HTTP Client library.
 
 =head1 Moo Roles Used
 
