@@ -73,4 +73,4 @@ If you want to test this object with your token
 
 # Licence
 
-
+The Perl 5 License (Artistic 1 & GPL 1 or later)
