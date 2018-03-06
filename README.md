@@ -1,8 +1,38 @@
-If you want to test this object with your token
+# Basic Example
 
-All Formal use case documentation is contained in the perldoc and pod files.
+This example shows how to connect to spark and respond to text messages
+```
+use Modern::Perl;
+use Data::Dumper;
+use AnyEvent::SparkBot;
+use AnyEvent::Loop;
+$|=1;
 
-To Build:
+my $obj=new AnyEvent::SparkBot(token=>$ENV{SPARK_TOKEN},on_message=>\&cb);
+
+$obj->que_getWsUrl(sub { $obj->start_connection});
+$obj->agent->run_next;
+AnyEvent::Loop::run;
+
+sub cb {
+  my ($sb,$result,$eventType,$verb,$json)=@_;
+  return unless $eventType eq 'conversation.activity' and $verb eq 'post';
+  if($result) {
+    my $data=$result->get_data;
+    my $response={
+      roomId=>$data->{roomId},
+      personId=>$data->{personId},
+      text=>"ya.. ya ya.. I'm on it!"
+    };
+    print Dumper($data);
+    $sb->spark->que_createMessage(sub {},$response);
+    $sb->agent->run_next;
+  } else {
+    print "Error: $result\n";
+  }
+}
+```
+## To Build:
 ```
   perl MakeFile.PL
   make
@@ -10,7 +40,9 @@ To Build:
   make install
 ```
 
-To run the unit tests with your test info
+## To run the unit tests with your test info
+
+If you want to test this object with your token
 ```
   export SPARK_TOKEN=myToken
   export TEST_USER='Firstname LastName'
