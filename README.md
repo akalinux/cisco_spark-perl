@@ -70,3 +70,7 @@ If you want to test this object with your token
   make test
   make install
 ```
+
+# Licence
+
+

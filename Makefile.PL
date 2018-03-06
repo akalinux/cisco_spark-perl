@@ -5,6 +5,7 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
     NAME              => 'AnyEvent::SparkBot',
     VERSION_FROM      => 'lib/AnyEvent/SparkBot.pm', # finds $VERSION
+    LICENSE=>'perl_5',
     PREREQ_PM         => {
     qw(
       IO::Socket::SSL 1.968
