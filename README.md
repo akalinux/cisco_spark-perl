@@ -1,4 +1,9 @@
-# Basic Example
+
+# Current Documentation
+
+For the full documentation, please see the perldoc(s)
+
+## Basic Example
 
 This example shows how to connect to spark and respond to text messages.
 ```
