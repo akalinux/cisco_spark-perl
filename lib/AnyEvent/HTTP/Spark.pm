@@ -31,7 +31,7 @@ AnyEvent::HTTP::Spark - HTTP Rest Client for Cisco Spark
 
   use AnyEvent::HTTP::Spark;
 
-  my $obj=new AnyEvent::HTTP::Spark;
+  my $obj=new AnyEvent::HTTP::Spark(token=>$ENV{SPARK_TOKEN});
 
 =head1 DESCRIPTION
 
@@ -333,7 +333,6 @@ sub build_get {
   }
 
   my $headers=$self->default_headers;
-
 
   my @args;
   while(my ($key,$value)=splice @list,0,2) {

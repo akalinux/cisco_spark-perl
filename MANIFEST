@@ -6,7 +6,7 @@ lib/AnyEvent/HTTP/Spark.pm
 lib/AnyEvent/SparkBot/SharedRole.pm
 lib/AnyEvent/SparkBot.pm
 README.md
-Makefile.PL
 Changes
+Makefile.PL
 META.yml                                 Module YAML meta-data (added by MakeMaker)
 META.json                                Module JSON meta-data (added by MakeMaker)
