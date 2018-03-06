@@ -1,6 +1,6 @@
 # Basic Example
 
-This example shows how to connect to spark and respond to text messages
+This example shows how to connect to spark and respond to text messages.
 ```
 use Modern::Perl;
 use Data::Dumper;
@@ -32,6 +32,7 @@ sub cb {
   }
 }
 ```
+
 ## To Build:
 ```
   perl MakeFile.PL
@@ -40,7 +41,7 @@ sub cb {
   make install
 ```
 
-## To run the unit tests with your test info
+## For more extensive unit testing
 
 If you want to test this object with your token
 ```
