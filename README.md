@@ -4,7 +4,7 @@
 This bundle includess the following libraries:
 
 | Module | Function |
-+--------+----------+
+|--------|----------|
 | AnyEvent::SparkBot | Asyncrnous AnyEvent loop implementation of the Spark Bot |
 | AnyEvent::HTTP::Spark | Dual Nature Syncrnous/Asyncrnous AnyEvent friendly Spark v1 HTTP Client library |
 | AnyEvent::SparkBot::SharedRole | Shared library used by AnyEvent::SparkBot and AnyEvent::HTTP::Spark |
