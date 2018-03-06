@@ -1,7 +1,15 @@
 
-# Current Documentation
+# Cico SparkBot implementation
 
-For the full documentation, please see the perldoc(s)
+This bundle includess the following libraries:
+
+| Module | Function |
++--------+----------+
+| AnyEvent::SparkBot | Asyncrnous AnyEvent loop implementation of the Spark Bot |
+| AnyEvent::HTTP::Spark | Dual Nature Syncrnous/Asyncrnous AnyEvent friendly Spark v1 HTTP Client library |
+| AnyEvent::SparkBot::SharedRole | Shared library used by AnyEvent::SparkBot and AnyEvent::HTTP::Spark |
+
+Once installed it you should be able to use perldoc to view the pod.
 
 ## Basic Example
 
