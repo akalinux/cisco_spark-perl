@@ -101,13 +101,30 @@ Blocking Context
   }
 
 
+=head1 People
+
+=head2 Get Me
+
 =over 4
 
 =item * Blocking my $result=$self->getMe() 
 
+Returns a L<Data::Result> Object, when true it contains the data, when false it contains why it failed.
+
 =item * Non-Blocking my $id=$self->que_getMe($cb) 
 
-Que's a request to identify this current user.
+Example Callback
+
+  $cb=sub {
+    my ($self,$id,$result,$request,$response,$hashRef)=@_;
+      # 0: $self The current AnyEvent::HTTP::Slack object
+      # 1: $id the id of the http request
+      # 2: Data::Result Object
+      # 3: HTTP::Request Object
+      # 4: HTTP::Result Object
+    };
+
+=item * Get Me Vendor Documentation: L<https://developer.ciscospark.com/endpoint-people-me-get.html>
 
 =cut
 
@@ -117,8 +134,6 @@ sub que_getMe {
 }
 
 =back
-
-=head1 People
 
 =head2 List People
 
