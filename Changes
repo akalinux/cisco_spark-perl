@@ -7,3 +7,8 @@
    The Perl 5 License (Artistic 1 & GPL 1 or later)
 0.004
   -- Pod fix ups
+1.004
+  -- Moved 1.xxx
+    -- Now Generate most of the http functions
+    -- All vendor HTTP Interface methods implemented
+    -- All Chat Object Methods implemented

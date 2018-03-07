@@ -1,6 +1,6 @@
 package AnyEvent::SparkBot;
 
-our $VERSION=0.004;
+our $VERSION=1.004;
 use Modern::Perl;
 use Moo;
 use MooX::Types::MooseLike::Base qw(:all);
@@ -28,16 +28,18 @@ AnyEvent::SparkBot - Cisco Spark WebSocket Client for the AnyEvent Loop
   use AnyEvent::SparkBot;
   use AnyEvent::Loop;
   $|=1;
-  
+
   my $obj=new AnyEvent::SparkBot(token=>$ENV{SPARK_TOKEN},on_message=>\&cb);
-  
+
   $obj->que_getWsUrl(sub { $obj->start_connection});
   $obj->agent->run_next;
   AnyEvent::Loop::run;
-  
+
   sub cb {
     my ($sb,$result,$eventType,$verb,$json)=@_;
     return unless $eventType eq 'conversation.activity' and $verb eq 'post';
+
+    # Data::Result Object is False when combination of EvenType and Verb are unsupprted
     if($result) {
       my $data=$result->get_data;
       my $response={
@@ -65,6 +67,28 @@ This module uses the following Moo role(s)
   AnyEvent::SparkBot::SharedRole
 
 =cut
+
+has retryTimeout=>(
+  is=>'ro',
+  isa=>Int,
+  default=>10,
+  lazy=>1,
+);
+
+has retryCount=>(
+  is=>'ro',
+  isa=>Int,
+  default=>1,
+  lazy=>1,
+);
+
+has retries=>(
+  is=>'ro',
+  isa=>HashRef,
+  lazy=>1,
+  default=>sub { {} },
+  required=>0,
+);
 
 has reconnect_sleep=>(
   is=>'ro',
@@ -172,6 +196,8 @@ Optional Arguments
     # this is where we authenticate and pull the websocket url from
   deviceDesc: JSON hash, representing the client description
   agent: an instance of AnyEvent::HTTP::MultiGet
+  retryTimeout: default 10, sets how long to wait afer getting a 429 error
+  retryCount: default 1, sets how many retries when we get a 429 error
 
 Timout and retry values:
 
@@ -289,47 +315,95 @@ sub handle_message : BENCHMARK_INFO {
     if($json->{id} ne $self->lastPing) {
       $self->log_error('Got a bad ping back?');
       return $self->handle_reconnect;
+    } else {
+      $self->log_debug("got a ping response");
+      return $self->setPing();
     }
   } else {
     if(exists $json->{data} and exists $json->{data}->{eventType} and exists $json->{data}->{activity} ) {
       my $activity=$json->{data}->{activity};
       my $eventType=$json->{data}->{eventType};
+      $eventType='unknown' unless defined $eventType;
       if(exists $activity->{verb}) {
         my $verb=$activity->{verb};
-        if($eventType eq 'conversation.activity' and $activity->{verb} eq 'post') {
+        $verb='unknown' unless defined($verb);
+        if($eventType eq 'conversation.activity') {
+          if($verb=~ /post|share/) {
+            if(exists $activity->{actor}) {
+	      my $actor=$activity->{actor};
 
-          if(exists $activity->{actor}) {
-	    my $actor=$activity->{actor};
-
-	    if($self->currentUser->{displayName} eq $actor->{displayName}) {
-	      $self->log_debug("ignoring message because we sent it");
-              $self->setPing();
-	      return;
-	    }
-	  }
-          if(exists $activity->{id}) {
-  	    $self->spark->que_getMessage(sub {
+	      if($self->currentUser->{displayName} eq $actor->{displayName}) {
+	        $self->log_debug("ignoring message because we sent it");
+                $self->setPing();
+	        return;
+	      }
+  	      $self->run_lookup('que_getMessage',sub {
+	        my ($agent,$id,$result,$req,$resp)=@_;
+                $self->on_message->($self,$result,$eventType,$verb,$json);
+	      },$activity->{id});
+	    } 
+	  } elsif($verb eq 'add' and $activity->{object}->{objectType} eq 'person') {
+	    my $args={
+	      roomId=>$activity->{target}->{id},
+	      personEmail=>$activity->{object}->{emailAddress},
+	    };
+	    $self->run_lookup('que_listMemberships',sub {
 	      my ($agent,$id,$result,$req,$resp)=@_;
               $self->on_message->($self,$result,$eventType,$verb,$json);
-	    },$activity->{id});
-	    $self->agent->run_next;
+	    },$args);
+	  } elsif($verb eq 'create') {
+	    my $args={
+	      personId=>$self->currentUser->{id},
+	    };
+	    $self->run_lookup('que_listMemberships',sub {
+	      my ($agent,$id,$result,$req,$resp)=@_;
+              $self->on_message->($self,$result,$eventType,$verb,$json);
+	    },$args);
+	  } elsif($verb=~ /lock|unlock|update/) {
+	    $self->run_lookup('que_getRoom',sub {
+	      my ($agent,$id,$result,$req,$resp)=@_;
+              $self->on_message->($self,$result,$eventType,$verb,$json);
+	    },$activity->{object}->{id});
 	  } else {
-            $self->on_message->($self,$self->new_false("Message id was not sent by the server"),$eventType,$verb,$json);
+            $self->on_message->($self,$self->new_false("Unsupported EventType: [$eventType] and Verb: [$verb]"),$eventType,$verb,$json);
 	  }
         } else {
-          $self->on_message->($self,$self->new_true($json),$eventType,$verb,$json);
+          $self->on_message->($self,$self->new_false("Unsupported EventType: [$eventType] and Verb: [$verb]"),$eventType,$verb,$json);
         }
       } else {
-        $self->on_message->($self,$self->new_true($json),$eventType,'unknown',$json);
+        my $eventType=defined($json->{data}->{eventType}) ? $json->{data}->{eventType} : 'unknown';
+        my $verb=defined($json->{data}->{activity}->{verb}) ? $json->{data}->{activity}->{verb} : 'unknown';
+        $self->on_message->($self,$self->new_false("Unsupported EventType: [$eventType] and Verb: [$verb]"),$eventType,'unknown',$json);
       }
     } else {
       my $eventType=defined($json->{data}->{eventType}) ? $json->{data}->{eventType} : 'unknown';
       my $verb=defined($json->{data}->{activity}->{verb}) ? $json->{data}->{activity}->{verb} : 'unknown';
-      $self->on_message->($self,$self->new_true($json),$eventType,$json->{data}->{activity}->{verb},$json);
+      $self->on_message->($self,$self->new_false("Unsupported EventType: [$eventType] and Verb: [$verb]"),$eventType,$verb,$json);
     }
   }
   $self->setPing();
 }
+
+sub run_lookup {
+  my ($self,$method,$cb,@args)=@_;
+  
+  my $count=$self->retryCount;
+  my $code=sub {
+    my ($sb,$id,$result,$request,$response)=@_;
+    return $cb->(@_) if $result or $count--==0 or $response->code!=429;
+
+    my $ae;
+    $ae=AnyEvent->timer(after=>$self->retryTimeout,cb=>sub {
+      delete $self->retries->{$ae};
+      $self->run_lookup($method,$cb,@args);
+    });
+    $self->retries->{$ae}=$ae;
+  };
+
+  $self->spark->$method($code,@args);
+  $self->agent->run_next;
+}
+
 
 =item * $self->handle_reconnect() 
 
