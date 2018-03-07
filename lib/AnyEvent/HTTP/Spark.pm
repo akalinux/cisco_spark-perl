@@ -166,7 +166,7 @@ Example Callback
       # 4: HTTP::Result Object
     };
 
-=item * Get Person Vendor Documentation: L<https://developer.ciscospark.com/endpoint-people-peopleId-get.html>
+=item * Get Person Vendor Documentation: L<https://developer.ciscospark.com/endpoint-people-personId-get.html>
 
 =back
 
@@ -216,7 +216,7 @@ Example Callback
       # 4: HTTP::Result Object
     };
 
-=item * Delete Person Vendor Documentation: L<https://developer.ciscospark.com/endpoint-people-peopleId-delete.html>
+=item * Delete Person Vendor Documentation: L<https://developer.ciscospark.com/endpoint-people-personId-delete.html>
 
 =back
 
@@ -241,7 +241,7 @@ Example Callback
       # 4: HTTP::Result Object
     };
 
-=item * Update Person Vendor Documentation: L<https://developer.ciscospark.com/endpoint-people-peopleId-put.html>
+=item * Update Person Vendor Documentation: L<https://developer.ciscospark.com/endpoint-people-personId-put.html>
 
 =back
 
@@ -1030,7 +1030,7 @@ Example Callback
       # 4: HTTP::Result Object
     };
 
-=item * Get Organization Vendor Documentation: L<https://developer.ciscospark.com/endpoint-organizations-organizationId-get.html>
+=item * Get Organization Vendor Documentation: L<https://developer.ciscospark.com/endpoint-organizations-orgId-get.html>
 
 =back
 
