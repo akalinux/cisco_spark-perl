@@ -1,5 +1,5 @@
 use Modern::Perl;
-use Charter::ForTestingOnly::Log4perlToString;
+use Log::LogMethods::Log4perlLogToString;
 use Carp qw(confess);
 use Data::Dumper;
 use JSON qw(to_json from_json);

@@ -12,3 +12,6 @@
     -- Now Generate most of the http functions
     -- All vendor HTTP Interface methods implemented
     -- All Chat Object Methods implemented
+1.005
+  -- Fixed bug 124697 
+   -- Now use pure cpan modules for logging validation
