@@ -15,3 +15,5 @@
 1.005
   -- Fixed bug 124697 
    -- Now use pure cpan modules for logging validation
+1.006
+  -- Pod clean ups

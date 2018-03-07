@@ -1274,7 +1274,7 @@ sub _build_common {
   }
 }
 
-=head2 Low Level Request functions
+=head1 Low Level Request functions
 
 This section documents low level request functions.
 
