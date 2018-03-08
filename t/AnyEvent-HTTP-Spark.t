@@ -13,7 +13,7 @@ use_ok($class);
 my $string;
 my $logger=LoggerToString($class,$string);
 my $token=exists $ENV{SPARK_TOKEN} ? $ENV{SPARK_TOKEN} : 'this is not a valid token';
-my $self=$class->new(logger=>$logger,token=>$token);
+my $self=$class->new(logger=>$logger,token=>$token,retryCount=>2);
 isa_ok($self,$class);
 {
   my $result=$self->build_post_json('test',{qw(test data)});

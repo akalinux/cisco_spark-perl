@@ -1,6 +1,6 @@
 package AnyEvent::SparkBot;
 
-our $VERSION=1.007;
+our $VERSION=1.008;
 use Modern::Perl;
 use Moo;
 use MooX::Types::MooseLike::Base qw(:all);
@@ -389,41 +389,19 @@ sub handle_message : BENCHMARK_INFO {
   $self->setPing();
 }
 
-=item * $self->run_lookup('que_method',$cb,@args);
+=item * $self->run_lookup($method,$cb,@args);
 
-Proxies the internal $self->spark object in a method that honnors the Retry-After interval.
+Shortcut for:
 
-Example:
-
-  $self->run_lookup('que_getMe',sub {
-    my ($sb,$id,$result,$request,$response)=@_;
-    return print Dumper($result->get_data) if $result;
-
-    warn "Failed to getMe, error was; $result";
-  });
+  $self->spark->$method($cb,@args);
+  $self->agent->run_next;
 
 =cut
 
 sub run_lookup {
   my ($self,$method,$cb,@args)=@_;
   
-  my $count=$self->retryCount;
-  my $code=sub {
-    my ($sb,$id,$result,$request,$response)=@_;
-    return $cb->(@_) if $result or $count--<0 or $response->code!=429;
-
-    my $timeout=defined($response->header('Retry-After')) ? $response->header('Retry-After') : $self->retryTimeout;
-    $self->log_warn("Got a timeout for request: $id, will retry in $timeout seconds");
-    $timeout=$self->retryTimeout unless looks_like_number($timeout);
-    my $ae;
-    $ae=AnyEvent->timer(after=>$timeout,cb=>sub {
-      delete $self->retries->{$ae};
-      $self->run_lookup($method,$cb,@args);
-    });
-    $self->retries->{$ae}=$ae;
-  };
-
-  $self->spark->$method($code,@args);
+  $self->spark->$method($cb,@args);
   $self->agent->run_next;
 }
 

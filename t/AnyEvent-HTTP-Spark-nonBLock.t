@@ -15,6 +15,8 @@ my $string;
 my $logger=LoggerToString($class,$string);
 my $token=exists $ENV{SPARK_TOKEN} ? $ENV{SPARK_TOKEN} : 'this is not a valid token';
 my $self=$class->new(logger=>$logger,token=>$token,on_message=>sub {});
+
+$self->spark->{retryCount}=2;
 isa_ok($self,$class);
 
 

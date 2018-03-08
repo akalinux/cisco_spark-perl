@@ -9,6 +9,7 @@ use HTTP::Request::Common qw(POST);
 use Ref::Util qw(is_plain_arrayref is_plain_hashref);
 use URI::Escape qw(uri_escape_utf8);
 use namespace::clean;
+use Scalar::Util qw(looks_like_number);
 use AnyEvent;
 
 BEGIN { 
@@ -21,6 +22,24 @@ has api_url=>(
   is=>'ro',
   lazy=>1,
   default=>'https://api.ciscospark.com/v1/',
+);
+
+has retryCount=>(
+  isa=>Int,
+  is=>'ro',
+  default=>1,
+);
+
+has retryAfter=>(
+  isa=>Int,
+  is=>'ro',
+  default=>10,
+);
+
+has retries=>(
+  isa=>HashRef,
+  is=>'ro',
+  default=>sub { return {} },
 );
 
 =head1 NAME
@@ -57,6 +76,11 @@ Optional OO Arguments
   agent: AnyEvent::HTTP::MultiGet object
   api_url: https://api.ciscospark.com/v1/
     # sets the web service the requests point to
+  retryCount: 1, how many retries to attempt when getting a 429 error
+
+Options set at runtime
+
+  retries: anymous hash, used to trak AnyEvent->timer objects
 
 =cut
 
@@ -1354,11 +1378,81 @@ sub queue_builder {
   my ($self,$cb,$method,$url,$data)=@_;
 
   my $result=$self->$method($url,$data);
-
   return $self->queue_result($cb,$result) unless $result;
   my $request=$result->get_data;
 
-  return $self->queue_request($request,$cb);
+  my $wrap;
+  my $count=$self->retryCount;
+  if($self->is_blocking) {
+    $wrap=sub {
+      my ($self,$id,$result,undef,$response)=@_;
+
+      return $cb->(@_) if $result or !($response->code==429 and $count-- >0);
+      my $timeout=looks_like_number($response->header('Retry-After')) ? $response->header('Retry-After') : $self->retryTimeout;
+      $self->log_warn("Request: $id recived a 429 response, will retry in $timeout seconds");
+      
+
+      if($count>0)  {
+        my $next_id=$self->queue_request($request,sub { 
+          my ($self,undef,$result,undef,$response)=@_;
+	  $wrap->($self,$id,$result,$request,$response);
+	});
+        $self->add_ids_for_blocking($next_id);
+        return $self->agent->run_next;
+      }
+
+      sleep $timeout;
+      my $code=sub {
+        my ($self,undef,$result,undef,$response)=@_;
+	$cb->($self,$id,$result,$request,$response);
+      };
+      
+      my $next_id=$self->queue_request($request,$code);
+      $self->add_ids_for_blocking($next_id);
+      $self->agent->run_next;
+    };
+  } else {
+    $wrap=sub {
+      my ($self,$id,$result,undef,$response)=@_;
+      return $cb->(@_) if $result or !($response->code==429 and $count-- >0);
+      my $timeout=looks_like_number($response->header('Retry-After')) ? $response->header('Retry-After') : $self->retryTimeout;
+      $self->log_warn("Request: $id recived a 429 response, will retry in $timeout seconds");
+
+      if($count>0)  {
+	my $ae;
+	$ae=AnyEvent->timer(after=>$timeout,cb=>sub {
+          my $next_id=$self->queue_request($request,sub { 
+            my ($self,undef,$result,undef,$response)=@_;
+	    $wrap->($self,$id,$result,$request,$response);
+	  });
+          $self->add_ids_for_blocking($next_id);
+          $self->agent->run_next;
+	  delete $self->retries->{$ae};
+	  undef $ae;
+	});
+	return $self->retries->{$ae}=$ae;
+      }
+      my $code=sub {
+        my ($self,undef,$result,undef,$response)=@_;
+	$cb->($self,$id,$result,$request,$response);
+      };
+
+      my $ae;
+      $ae=AnyEvent->timer(after=>$timeout,cb=>sub {
+        my $next_id=$self->queue_request($request,$code);
+        $self->add_ids_for_blocking($next_id);
+        $self->agent->run_next;
+	delete $self->retries->{$ae};
+	undef $ae;
+      });
+      return $self->retries->{$ae}=$ae;
+
+    };
+  }
+
+
+
+  return $self->queue_request($request,$wrap);
 }
 
 
