@@ -17,3 +17,10 @@
    -- Now use pure cpan modules for logging validation
 1.006
   -- Pod clean ups
+1.007
+  -- Pod Updates
+  -- Documented $self->run_lookup
+  -- $self->run_lookup Retry-After header is now correctly supported
+  -- true non blocking unit testing added
+  -- Got advice from cisco about listMessages, apparently bots can only list messages that in rooms that refer to themselves.
+  -- Added far more extensive unit testing

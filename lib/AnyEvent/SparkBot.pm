@@ -1,9 +1,10 @@
 package AnyEvent::SparkBot;
 
-our $VERSION=1.006;
+our $VERSION=1.007;
 use Modern::Perl;
 use Moo;
 use MooX::Types::MooseLike::Base qw(:all);
+use Scalar::Util qw( looks_like_number);
 use Data::Dumper;
 use namespace::clean;
 use AnyEvent::HTTP::MultiGet;
@@ -29,9 +30,15 @@ AnyEvent::SparkBot - Cisco Spark WebSocket Client for the AnyEvent Loop
   use AnyEvent::Loop;
   $|=1;
 
-  my $obj=new AnyEvent::SparkBot(token=>$ENV{SPARK_TOKEN},on_message=>\&cb);
+  our $obj=new AnyEvent::SparkBot(token=>$ENV{SPARK_TOKEN},on_message=>\&cb);
 
-  $obj->que_getWsUrl(sub { $obj->start_connection});
+  $obj->que_getWsUrl(sub { 
+    my ($agent,$id,$result)=@_;
+
+    # start here if we got a valid connection
+    return $obj->start_connection if $result;
+    $obj->handle_reconnect;
+  });
   $obj->agent->run_next;
   AnyEvent::Loop::run;
 
@@ -47,9 +54,8 @@ AnyEvent::SparkBot - Cisco Spark WebSocket Client for the AnyEvent Loop
         personId=>$data->{personId},
         text=>"ya.. ya ya.. I'm on it!"
       };
-      print Dumper($data);
-      $sb->spark->que_createMessage(sub {},$response);
-      $sb->agent->run_next;
+      # Proxy our lookup in a Retry-After ( prevents a lot of errors )
+      $obj->run_lookup('que_createMessage',(sub {},$response);
     } else {
       print "Error: $result\n";
     }
@@ -258,8 +264,7 @@ sub start_connection : BENCHMARK_DEBUG {
 
   my $url=$self->connInfo->{webSocketUrl};
 
-
-  $self->spark->que_getMe(sub {
+  $self->run_lookup('que_getMe',sub {
     my ($sb,$id,$result)=@_;
     return $self->log_error("Could not get spark Bot user info?") unless $result;
 
@@ -384,16 +389,34 @@ sub handle_message : BENCHMARK_INFO {
   $self->setPing();
 }
 
+=item * $self->run_lookup('que_method',$cb,@args);
+
+Proxies the internal $self->spark object in a method that honnors the Retry-After interval.
+
+Example:
+
+  $self->run_lookup('que_getMe',sub {
+    my ($sb,$id,$result,$request,$response)=@_;
+    return print Dumper($result->get_data) if $result;
+
+    warn "Failed to getMe, error was; $result";
+  });
+
+=cut
+
 sub run_lookup {
   my ($self,$method,$cb,@args)=@_;
   
   my $count=$self->retryCount;
   my $code=sub {
     my ($sb,$id,$result,$request,$response)=@_;
-    return $cb->(@_) if $result or $count--==0 or $response->code!=429;
+    return $cb->(@_) if $result or $count--<0 or $response->code!=429;
 
+    my $timeout=defined($response->header('Retry-After')) ? $response->header('Retry-After') : $self->retryTimeout;
+    $self->log_warn("Got a timeout for request: $id, will retry in $timeout seconds");
+    $timeout=$self->retryTimeout unless looks_like_number($timeout);
     my $ae;
-    $ae=AnyEvent->timer(after=>$self->retryTimeout,cb=>sub {
+    $ae=AnyEvent->timer(after=>$timeout,cb=>sub {
       delete $self->retries->{$ae};
       $self->run_lookup($method,$cb,@args);
     });

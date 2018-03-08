@@ -518,6 +518,13 @@ Example Callback
 
 =head2 List Messages
 
+Special Notes on bots for this method, bots can only list messages refering to the bot itself. This means there are 2 manditory arguments when using a bot.  If mentionedPeople is not set to the litteral string 'me' a bot will encounter a 403 error.
+
+$hashRef Required options
+
+  roomId: the id for the room
+  mentionedPeople: me
+
 =over 4
 
 =item * Blocking my $result=$self->listMessages($hashRef)
@@ -1477,7 +1484,7 @@ Que's a diy get request
 sub que_getRaw {
   my ($self,$cb,$url)=@_;
   my $req=HTTP::Request->new(GET=>$url,$self->default_headers);
-  return $self->queue_request($cb,$req);
+  return $self->queue_request($req,$cb);
 }
 
 =item * my $id=$self->que_get($cb,$url,$data);

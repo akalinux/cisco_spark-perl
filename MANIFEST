@@ -1,4 +1,5 @@
 MANIFEST
+t/AnyEvent-HTTP-Spark-nonBLock.t
 t/AnyEvent-HTTP-Spark.t
 t/AnyEvent-SparkBot.t
 t/AnyEvent-SparkBot-SharedRole.t
