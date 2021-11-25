@@ -1,8 +1,8 @@
 MANIFEST
 Makefile.PL
 lib/AnyEvent/HTTP/Spark.pm
-lib/AnyEvent/SparkBot.pm
 lib/AnyEvent/SparkBot/SharedRole.pm
+lib/AnyEvent/SparkBot.pm
 t/AnyEvent-HTTP-Spark-nonBLock.t
 t/AnyEvent-HTTP-Spark.t
 t/AnyEvent-SparkBot-SharedRole.t
