@@ -345,7 +345,7 @@ sub handle_message : BENCHMARK_INFO {
 	      }
   	      $self->run_lookup('que_getMessage',sub {
 	        my ($agent,$id,$result,$req,$resp)=@_;
-                $self->on_message->($self,$result,$eventType,$verb,$json);
+                $self->on_message->($self,$result,$eventType,$verb,$json,$req,$resp,$message);
 	      },$activity->{id});
 	    } 
 	  } elsif($verb eq 'add' and $activity->{object}->{objectType} eq 'person') {
@@ -355,7 +355,7 @@ sub handle_message : BENCHMARK_INFO {
 	    };
 	    $self->run_lookup('que_listMemberships',sub {
 	      my ($agent,$id,$result,$req,$resp)=@_;
-              $self->on_message->($self,$result,$eventType,$verb,$json);
+              $self->on_message->($self,$result,$eventType,$verb,$json,$req,$resp,$message);
 	    },$args);
 	  } elsif($verb eq 'create') {
 	    my $args={
@@ -363,12 +363,12 @@ sub handle_message : BENCHMARK_INFO {
 	    };
 	    $self->run_lookup('que_listMemberships',sub {
 	      my ($agent,$id,$result,$req,$resp)=@_;
-              $self->on_message->($self,$result,$eventType,$verb,$json);
+              $self->on_message->($self,$result,$eventType,$verb,$json,$req,$resp,$message);
 	    },$args);
 	  } elsif($verb=~ /lock|unlock|update/) {
 	    $self->run_lookup('que_getRoom',sub {
 	      my ($agent,$id,$result,$req,$resp)=@_;
-              $self->on_message->($self,$result,$eventType,$verb,$json);
+              $self->on_message->($self,$result,$eventType,$verb,$json,$req,$resp,$message);
 	    },$activity->{object}->{id});
 	  } else {
             $self->on_message->($self,$self->new_false("Unsupported EventType: [$eventType] and Verb: [$verb]"),$eventType,$verb,$json);

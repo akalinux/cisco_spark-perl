@@ -21,8 +21,8 @@ has api_url=>(
   isa=>Str,
   is=>'ro',
   lazy=>1,
-	default=>'https://api.ciscospark.com/v1/',
-	#default=>'https://webexapis.com/v1/v1/',
+	#default=>'https://api.ciscospark.com/v1/',
+	default=>'https://webexapis.com/v1/',
 );
 
 has retryCount=>(
@@ -81,7 +81,8 @@ Optional OO Arguments
 
   logger: sets the logging object
   agent: AnyEvent::HTTP::MultiGet object
-  api_url: https://api.ciscospark.com/v1/
+
+  api_url: https://webexapis.com/v1/
     # sets the web service the requests point to
   retryCount: 1, how many retries to attempt when getting a 429 error
 
