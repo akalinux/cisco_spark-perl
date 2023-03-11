@@ -1,6 +1,6 @@
 package AnyEvent::SparkBot;
 
-our $VERSION='1.013';
+our $VERSION='1.014';
 use Modern::Perl;
 use Moo;
 use MooX::Types::MooseLike::Base qw(:all);
@@ -147,7 +147,8 @@ has deviceDesc=>(
 has defaultUrl=>(
   is=>'ro',
   isa=>Str,
-  default=>'https://wdm-a.wbx2.com/wdm/api/v1/devices',
+	default=>'https://wdm-a.wbx2.com/wdm/api/v1/devices',
+	#default=>'https://webexapis.com/wdm/api/v1/devices',
 );
 
 has lastConn=>(
