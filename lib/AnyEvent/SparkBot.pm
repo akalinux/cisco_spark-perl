@@ -1,6 +1,6 @@
 package AnyEvent::SparkBot;
 
-our $VERSION='1.015';
+our $VERSION='1.016';
 use Modern::Perl;
 use Moo;
 use MooX::Types::MooseLike::Base qw(:all);
@@ -346,7 +346,7 @@ sub handle_message : BENCHMARK_INFO {
   	      $self->run_lookup('que_getMessage',sub {
 	        my ($agent,$id,$result,$req,$resp)=@_;
                 $self->on_message->($self,$result,$eventType,$verb,$json,$req,$resp,$message);
-	      },$activity->{id});
+	      },encode_base64('ciscospark://us/MESSAGE/'.$activity->{id},''));
 	    } 
 	  } elsif($verb eq 'add' and $activity->{object}->{objectType} eq 'person') {
 	    my $args={
