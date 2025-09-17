@@ -49,3 +49,5 @@
   -- added Accept http header by default
   -- removed ? from get when no get arguments are included
   -- we now have to generaate encoding values for raw websocket message ids, See: https://developer.webex.com/blog/what-the-base-decoding-webex-api-ids
+1.017
+  -- fixed warning line 341 in lib/AnyEvent/SparkBot.pm
